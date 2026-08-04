@@ -130,3 +130,25 @@ jobs:
             COSM.OS-Windows-0.7.0.zip
           fail_on_unmatched_files: true
           overwrite_files: true
+
+      - name: Record successful publication
+        shell: pwsh
+        run: |
+          @"
+          # Release status
+
+          **COSM.OS Desktop v0.7.0 was built and published successfully.**
+
+          Release assets:
+
+          - `COSM.OS-Setup-0.7.0.exe`
+          - `COSM.OS-Windows-0.7.0.zip`
+
+          Source commit imported from:
+
+          `HanDrolio/handrolio.github.io@94921d635ad8f5d69f3e8560257e5c947351e9e1`
+          "@ | Set-Content RELEASE-STATUS.md
+
+          git add RELEASE-STATUS.md
+          git commit -m "Record successful v0.7.0 release"
+          git push origin HEAD:main
