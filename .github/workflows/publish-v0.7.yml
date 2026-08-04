@@ -11,58 +11,19 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: publish-cosmos-desktop-v0.7
+  cancel-in-progress: true
+
 jobs:
-  sync-build-release:
+  build-release:
     runs-on: windows-latest
 
     steps:
-      - name: Check out desktop repository
+      - name: Check out source
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Check out verified v0.7 source
-        uses: actions/checkout@v4
-        with:
-          repository: HanDrolio/handrolio.github.io
-          ref: 94921d635ad8f5d69f3e8560257e5c947351e9e1
-          path: upstream
-          persist-credentials: false
-
-      - name: Sync application source
-        shell: pwsh
-        run: |
-          $files = @(
-            'index.html',
-            'manifest.webmanifest',
-            'sw.js',
-            'package.json'
-          )
-
-          foreach ($file in $files) {
-            Copy-Item "upstream/$file" $file -Force
-          }
-
-          $directories = @('css', 'desktop', 'js')
-          foreach ($directory in $directories) {
-            if (Test-Path $directory) {
-              Remove-Item $directory -Recurse -Force
-            }
-            Copy-Item "upstream/$directory" $directory -Recurse -Force
-          }
-
-          Remove-Item upstream -Recurse -Force
-
-      - name: Commit synced source
-        shell: pwsh
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html manifest.webmanifest sw.js package.json css desktop js
-          if (-not (git diff --cached --quiet)) {
-            git commit -m "Import COSM.OS Desktop v0.7.0 source"
-            git push origin HEAD:main
-          }
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -97,39 +58,48 @@ jobs:
             -DestinationPath "COSM.OS-Windows-0.7.0.zip" `
             -Force
 
-      - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v0.7.0
-          name: COSM.OS Desktop v0.7.0
-          target_commitish: main
-          make_latest: true
-          generate_release_notes: false
-          body: |
-            ## COSM.OS Desktop v0.7.0 — Pure Signal Reset
+      - name: Write release notes
+        shell: pwsh
+        run: |
+          @"
+          ## COSM.OS Desktop v0.7.0 — Pure Signal Reset
 
-            A private Windows desktop AI journal and conversation system powered by local Ollama models.
+          A private Windows desktop AI journal and conversation system powered by local Ollama models.
 
-            ### Highlights
-            - Nine compact personas
-            - Chat Mode with only three raw exchanges of context
-            - One-shot Log Mode
-            - Deterministic `remember`, `summary`, and `plan` commands
-            - Local model selection and generation presets
-            - Local chats, logs, import, and export
-            - No cloud account required
+          ### Highlights
+          - Nine compact personas
+          - Chat Mode with only three raw exchanges of context
+          - One-shot Log Mode
+          - Deterministic `remember`, `summary`, and `plan` commands
+          - Local model selection and generation presets
+          - Local chats, logs, import, and export
+          - No cloud account required
 
-            ### Setup
-            1. Install and run Ollama.
-            2. Pull a model such as `qwen2.5:3b`.
-            3. Run the Windows installer attached below.
+          ### Setup
+          1. Install and run Ollama.
+          2. Pull a model such as `qwen2.5:3b`.
+          3. Run the attached Windows installer.
 
-            The installer is unsigned and may trigger Microsoft SmartScreen.
-          files: |
-            dist/COSM.OS-Setup-0.7.0.exe
-            COSM.OS-Windows-0.7.0.zip
-          fail_on_unmatched_files: true
-          overwrite_files: true
+          The installer is unsigned and may trigger Microsoft SmartScreen.
+          "@ | Set-Content RELEASE-NOTES.md
+
+      - name: Replace v0.7.0 release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete v0.7.0 --yes --cleanup-tag 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "No previous v0.7.0 release found; creating a new one."
+          }
+
+          gh release create v0.7.0 `
+            "dist/COSM.OS-Setup-0.7.0.exe" `
+            "COSM.OS-Windows-0.7.0.zip" `
+            --title "COSM.OS Desktop v0.7.0" `
+            --notes-file "RELEASE-NOTES.md" `
+            --target main `
+            --latest
 
       - name: Record successful publication
         shell: pwsh
@@ -144,11 +114,11 @@ jobs:
           - `COSM.OS-Setup-0.7.0.exe`
           - `COSM.OS-Windows-0.7.0.zip`
 
-          Source commit imported from:
-
-          `HanDrolio/handrolio.github.io@94921d635ad8f5d69f3e8560257e5c947351e9e1`
+          Verified source version: `0.7.0`
           "@ | Set-Content RELEASE-STATUS.md
 
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add RELEASE-STATUS.md
           git commit -m "Record successful v0.7.0 release"
           git push origin HEAD:main
