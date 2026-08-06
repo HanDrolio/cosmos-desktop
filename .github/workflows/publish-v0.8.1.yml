@@ -3,7 +3,17 @@ name: Publish COSM.OS Desktop v0.8.1
 on:
   push:
     branches: [main]
-    paths: [.github/workflows/publish-v0.8.1.yml]
+    # Publish when the hotfix itself changes, not only when this workflow changes.
+    paths:
+      - package.json
+      - index.html
+      - manifest.webmanifest
+      - icon.svg
+      - css/**
+      - js/**
+      - desktop/**
+      - test/**
+      - .github/workflows/publish-v0.8.1.yml
   workflow_dispatch:
 
 permissions:
