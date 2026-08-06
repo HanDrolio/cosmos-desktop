@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   build-release:
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || (github.event_name == 'issues' && github.event.issue.title == '[release] v0.7.1-ui-refresh') || (github.event_name == 'pull_request' && github.head_ref == 'ui-refresh')
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || (github.event_name == 'issues' && github.event.issue.title == '[release] v0.7.1-ui-refresh') || (github.event_name == 'pull_request' && github.head_ref == 'release-trigger-v0.7.1')
     runs-on: windows-latest
 
     steps:
