@@ -3,20 +3,13 @@ name: Publish COSM.OS Desktop v0.7.1 UI Refresh
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - .github/workflows/publish-v0.7.1-ui-refresh.yml
       - RELEASE-TRIGGER-v0.7.1.md
-  issues:
-    types: [opened]
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
-  issues: write
 
 concurrency:
   group: publish-cosmos-desktop-v0.7.1-ui-refresh
@@ -24,7 +17,6 @@ concurrency:
 
 jobs:
   build-release:
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || (github.event_name == 'issues' && github.event.issue.title == '[release] v0.7.1-ui-refresh') || (github.event_name == 'pull_request' && github.head_ref == 'release-trigger-v0.7.1')
     runs-on: windows-latest
 
     steps:
@@ -33,6 +25,23 @@ jobs:
         with:
           ref: ui-refresh
           fetch-depth: 0
+
+      - name: Record active workflow run
+        shell: pwsh
+        run: |
+          @"
+          # Active UI refresh release workflow
+
+          Run ID: $env:GITHUB_RUN_ID
+          Event commit: $env:GITHUB_SHA
+          Source branch: ui-refresh
+          "@ | Set-Content WORKFLOW-RUN-UI-REFRESH.md
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add WORKFLOW-RUN-UI-REFRESH.md
+          git commit -m "Record active v0.7.1 UI refresh workflow"
+          git push origin HEAD:ui-refresh
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -130,20 +139,9 @@ jobs:
           - `COSM.OS-Windows-0.7.1-UI-Refresh.zip`
 
           Source branch: `ui-refresh`
-          Source commit: `$env:GITHUB_SHA`
           Workflow run: `$env:GITHUB_RUN_ID`
           "@ | Set-Content RELEASE-STATUS-UI-REFRESH.md
 
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add RELEASE-STATUS-UI-REFRESH.md
           git commit -m "Record successful v0.7.1 UI refresh release"
           git push origin HEAD:ui-refresh
-
-      - name: Close release trigger issue
-        if: github.event_name == 'issues'
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh issue close ${{ github.event.issue.number }} --comment "v0.7.1 UI Refresh installer and archive published successfully."
