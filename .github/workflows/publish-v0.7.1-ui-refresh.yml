@@ -7,9 +7,12 @@ on:
       - main
     paths:
       - .github/workflows/publish-v0.7.1-ui-refresh.yml
+  issues:
+    types: [opened]
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: publish-cosmos-desktop-v0.7.1-ui-refresh
@@ -17,6 +20,7 @@ concurrency:
 
 jobs:
   build-release:
+    if: github.event_name != 'issues' || github.event.issue.title == '[release] v0.7.1-ui-refresh'
     runs-on: windows-latest
 
     steps:
@@ -131,3 +135,11 @@ jobs:
           git add RELEASE-STATUS-UI-REFRESH.md
           git commit -m "Record successful v0.7.1 UI refresh release"
           git push origin HEAD:ui-refresh
+
+      - name: Close release trigger issue
+        if: github.event_name == 'issues'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue close ${{ github.event.issue.number }} --comment "v0.7.1 UI Refresh installer and archive published successfully."
