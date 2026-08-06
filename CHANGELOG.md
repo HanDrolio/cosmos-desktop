@@ -2,6 +2,47 @@
 
 This changelog records the Windows desktop evolution of COSM.OS.
 
+## 0.8.0 — Living Archive
+
+### Added
+
+- Canonical local archive records for chat messages, journal entries, remembered notes, and Ollama replies.
+- Stable source pointers, timestamps, persona metadata, and thread IDs beside original text.
+- Global archive search with keyword, source, persona, and date filters.
+- Direct result navigation back to the original chat or journal moment.
+- Dedicated Threads page showing moment count, latest activity, current phase, and connected personas.
+- Unified chronological timeline for every thread across chats, journals, notes, and local replies.
+- Retroactive archive scanning that attaches thread metadata without editing stored words.
+- Manual thread controls:
+  - rename
+  - pin
+  - hide and unhide
+  - merge duplicate threads
+  - manually add an archive moment
+  - remove a moment while preserving that removal through later scans
+- Deterministic local thread summaries.
+- Optional Ollama thread summaries through the existing localhost-only desktop bridge.
+- Versioned portable archives with archive format version, UI state, thread controls, chats, notes, replies, and local model settings.
+- A redesigned clean workspace: compact navigation, universal search, calm rounded surfaces, accessible contrast, and light/dark themes.
+
+### Changed
+
+- Moved the old journal-only Living Thread card into a full archive system shared by Chat and Journal.
+- Updated the service-worker cache shell for the archive, model controls, and revised UI.
+- Bumped the Windows installer version to 0.8.0.
+
+### Privacy
+
+- Thread scans are deterministic and local.
+- Archive exports are ordinary local JSON files.
+- Optional enrichment sends records only to the configured local Ollama server, never to a cloud model.
+
+### Result
+
+COSM.OS is no longer only a journal with local AI. It is a locally searchable map of conversations, projects, people, memories, and the paths between them.
+
+---
+
 ## 0.7.0 — Pure Signal Reset
 
 Released August 3, 2026.

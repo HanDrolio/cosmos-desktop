@@ -4,70 +4,115 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>COSM.OS</title>
-<meta name="description" content="A private local-first journal and conversation system powered by selected persona prompts and local Ollama models.">
-<meta name="theme-color" content="#06080f">
+<meta name="description" content="A private, local-first archive for conversations, journals, threads, and local Ollama replies.">
+<meta name="theme-color" content="#202124">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%2306080f'/><circle cx='22' cy='32' r='9' fill='%234a8dff'/><circle cx='42' cy='32' r='9' fill='%23f0c060'/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%23202124'/><circle cx='20' cy='32' r='8' fill='%234285f4'/><circle cx='32' cy='20' r='8' fill='%2334a853'/><circle cx='44' cy='32' r='8' fill='%23fbbc05'/><circle cx='32' cy='44' r='8' fill='%23ea4335'/></svg>">
 <link rel="stylesheet" href="./css/style.css">
 <link rel="stylesheet" href="./css/model-settings.css">
 </head>
-<body class="sidebar-open">
-
+<body class="sidebar-open theme-dark">
 <div id="appShell">
-  <aside id="sidebar" aria-label="chat history">
+  <aside id="sidebar" aria-label="COSM.OS navigation">
     <div class="sideHead">
-      <div class="sideBrand"><span>🟦🌌🟨</span><b>COSM.OS</b></div>
-      <button id="sidebarClose" aria-label="close sidebar">×</button>
+      <div class="sideBrand" aria-label="COSM.OS">
+        <span class="brandMark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span>COSM.OS</span>
+      </div>
+      <button id="sidebarClose" class="iconButton" aria-label="close sidebar">×</button>
     </div>
-    <button id="newChat"><span>＋</span> new chat</button>
-    <div class="sideLabel">local chats</div>
-    <div id="chatList"></div>
-    <div class="sideFoot">stored privately on this machine</div>
+
+    <button id="newChat" class="newChatButton"><span aria-hidden="true">＋</span> New chat</button>
+
+    <nav class="appNav" aria-label="workspace">
+      <button class="navItem" data-view="chat"><span aria-hidden="true">✦</span> Chat</button>
+      <button class="navItem" data-view="log"><span aria-hidden="true">◌</span> Journal</button>
+      <button class="navItem" data-view="search"><span aria-hidden="true">⌕</span> Search</button>
+      <button class="navItem" data-view="threads"><span aria-hidden="true">⌘</span> Threads</button>
+    </nav>
+
+    <div class="sideSection">
+      <div class="sideLabel">Recent chats</div>
+      <div id="chatList"></div>
+    </div>
+
+    <div class="sideFoot">
+      <button id="themeToggle" class="quietButton" title="toggle color theme"><span id="themeIcon" aria-hidden="true">☾</span><span id="themeLabel">Dark</span></button>
+      <span class="localLock">⌂ local-first</span>
+    </div>
   </aside>
 
   <button id="sidebarShade" aria-label="close sidebar"></button>
 
   <section id="workspace">
-    <header>
-      <button id="sidebarToggle" aria-label="toggle chat history">☰</button>
-      <div class="chatHeading"><span id="currentChatTitle">New chat</span></div>
-      <div class="tabs">
-        <button class="tab on" data-mode="chat">chat</button>
-        <button class="tab" data-mode="log">log</button>
+    <header class="topbar">
+      <button id="sidebarToggle" class="iconButton" aria-label="toggle navigation">☰</button>
+      <div class="workspaceTitle">
+        <span id="currentChatTitle">New chat</span>
+        <small id="viewHint">Private desktop archive</small>
+      </div>
+      <div class="quickSearch">
+        <span aria-hidden="true">⌕</span>
+        <input id="quickSearch" type="search" autocomplete="off" placeholder="Search your past…" aria-label="search your archive">
+        <kbd>⌘K</kbd>
       </div>
       <div class="utils">
-        <button class="util" id="export">export</button>
-        <button class="util" id="importBtn">import</button>
+        <button class="util" id="export">Export</button>
+        <button class="util" id="importBtn">Import</button>
         <input type="file" id="importFile" accept="application/json">
       </div>
     </header>
 
-    <nav id="rail" aria-label="voices"></nav>
-    <div id="lockNote"></div>
-
-    <div id="modelBar" data-phase="idle">
-      <span class="modelDot" aria-hidden="true"></span>
-      <span id="modelStatus" role="status" aria-live="polite">checking local models…</span>
-      <select id="modelSelect" aria-label="local model">
-        <option value="auto">auto · largest Qwen</option>
-      </select>
-      <button class="util" id="modelTune" title="generation settings and presets" aria-label="open model settings">⚙</button>
-      <button class="util" id="modelRefresh" title="scan Ollama models" aria-label="refresh models">↻</button>
-      <button class="util" id="modelBtn">load local ai</button>
-    </div>
-
     <main id="scroll"><div id="col"></div></main>
 
-    <div class="barwrap">
-      <div class="bar" id="bar">
-        <textarea id="input" rows="1" placeholder="say it plain…" aria-label="message"></textarea>
-        <button id="send" aria-label="send">↑</button>
+    <section id="composerRegion" aria-label="conversation controls">
+      <div class="composerMeta">
+        <div id="lockNote"></div>
+        <div id="rail" aria-label="voices"></div>
       </div>
-    </div>
+
+      <div id="modelBar" data-phase="idle">
+        <span class="modelDot" aria-hidden="true"></span>
+        <span id="modelStatus" role="status" aria-live="polite">checking local models…</span>
+        <select id="modelSelect" aria-label="local model">
+          <option value="auto">auto · largest Qwen</option>
+        </select>
+        <button class="util iconUtil" id="modelTune" title="generation settings and presets" aria-label="open model settings">⚙</button>
+        <button class="util iconUtil" id="modelRefresh" title="scan Ollama models" aria-label="refresh models">↻</button>
+        <button class="util modelAction" id="modelBtn">Load local AI</button>
+      </div>
+
+      <div class="barwrap">
+        <div class="bar" id="bar">
+          <textarea id="input" rows="1" placeholder="Message COSM.OS…" aria-label="message"></textarea>
+          <button id="send" aria-label="send"><span aria-hidden="true">↑</span></button>
+        </div>
+        <p class="composerNote">Archive stays on this machine. Ollama is used only when you choose local AI.</p>
+      </div>
+    </section>
   </section>
 </div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<dialog id="threadMomentDialog" aria-labelledby="threadMomentTitle">
+  <div class="archiveDialog">
+    <div class="archiveDialogHead">
+      <div>
+        <div class="eyebrow">Manual thread control</div>
+        <h2 id="threadMomentTitle">Add a moment</h2>
+        <p>Search the private archive, then attach exactly one original record.</p>
+      </div>
+      <button class="iconButton" id="threadMomentClose" aria-label="close dialog">×</button>
+    </div>
+    <div class="archiveDialogBody">
+      <label class="dialogSearch"><span aria-hidden="true">⌕</span><input id="threadMomentSearch" type="search" autocomplete="off" placeholder="Find a chat, journal entry, note, or reply…"></label>
+      <div id="threadMomentResults" class="momentPickerResults"></div>
+    </div>
+  </div>
+</dialog>
 
 <dialog id="modelSettingsDialog" aria-labelledby="modelSettingsTitle">
   <div class="tuneShell">
@@ -151,6 +196,7 @@
 <script src="./js/persona-prompts.js"></script>
 <script src="./js/model-settings.js"></script>
 <script src="./js/threads.js"></script>
+<script src="./js/archive.js"></script>
 <script src="./js/desktop-ai.js"></script>
 <script src="./js/voice-controller.js"></script>
 <script src="./js/webllm.js"></script>

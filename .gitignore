@@ -1,0 +1,6 @@
+node_modules/
+dist/
+RELEASE-NOTES.md
+COSM.OS-Windows-*.zip
+*.log
+.DS_Store

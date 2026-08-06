@@ -1,0 +1,130 @@
+name: Publish COSM.OS Desktop v0.8.0
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/publish-v0.8.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-cosmos-desktop-v0.8
+  cancel-in-progress: false
+
+jobs:
+  build-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify release version
+        shell: pwsh
+        run: |
+          $version = node -p "require('./package.json').version"
+          if ($version -ne "0.8.0") {
+            throw "Expected package version 0.8.0; found $version"
+          }
+
+      - name: Check JavaScript syntax
+        shell: pwsh
+        run: |
+          Get-ChildItem js -Filter *.js | ForEach-Object { node --check $_.FullName }
+          node --check desktop/main.js
+          node --check desktop/preload.js
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Windows installer
+        run: npm run dist -- --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - name: Package release archive
+        shell: pwsh
+        run: Compress-Archive -Path "dist/COSM.OS-Setup-0.8.0.exe", "README.md", "CHANGELOG.md" -DestinationPath "COSM.OS-Windows-0.8.0.zip" -Force
+
+      - name: Write release notes
+        shell: pwsh
+        run: |
+          @"
+          ## COSM.OS Desktop v0.8.0 — Living Archive
+
+          Search your past. Follow the thread. Open the original moment.
+
+          ### Highlights
+          - Global search across chats, journal entries, remembered notes, and local replies
+          - Source, voice, and date filters
+          - Dedicated Threads page and unified chronological timelines
+          - Retroactive deterministic thread scan
+          - Thread rename, pin, hide, merge, and manual moment controls
+          - Versioned portable archive import and export
+          - Deterministic summaries plus optional local Ollama enrichment
+          - Refined desktop UI with light and dark themes
+
+          ### Privacy
+          Archive data stays on the machine. Optional summaries use only the local Ollama server.
+
+          ### Setup
+          1. Install and run Ollama.
+          2. Pull a model such as qwen2.5:3b.
+          3. Run the attached Windows installer.
+
+          The installer is unsigned and may trigger Microsoft SmartScreen.
+          "@ | Set-Content RELEASE-NOTES.md
+
+      - name: Replace v0.8.0 release only
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete v0.8.0 --yes --cleanup-tag 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "No previous v0.8.0 release found; creating a new one."
+          }
+          gh release create v0.8.0 "dist/COSM.OS-Setup-0.8.0.exe" "COSM.OS-Windows-0.8.0.zip" --title "COSM.OS Desktop v0.8.0" --notes-file "RELEASE-NOTES.md" --target $env:GITHUB_SHA
+
+      - name: Record successful publication
+        shell: pwsh
+        run: |
+          @"
+          # Release status
+
+          ## v0.8.0 — Living Archive
+
+          **COSM.OS Desktop v0.8.0 was built and published successfully.**
+
+          Release assets:
+
+          - COSM.OS-Setup-0.8.0.exe
+          - COSM.OS-Windows-0.8.0.zip
+
+          Verified source version: 0.8.0
+          Workflow run: $env:GITHUB_RUN_ID
+
+          ## v0.7.0 — Pure Signal Reset
+
+          v0.7.0 remains published and available as the preserved previous release:
+
+          - COSM.OS-Setup-0.7.0.exe
+          - COSM.OS-Windows-0.7.0.zip
+          "@ | Set-Content RELEASE-STATUS.md
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add RELEASE-STATUS.md
+          git commit -m "Record successful v0.8.0 release"
+          git push origin HEAD:main

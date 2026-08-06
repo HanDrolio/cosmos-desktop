@@ -1,8 +1,8 @@
 {
   "name": "cosmos-desktop",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "private": true,
-  "description": "Private Windows desktop edition of COSM.OS with minimalist local Ollama conversation.",
+  "description": "Private Windows desktop living archive with local Ollama conversation, search, and threads.",
   "main": "desktop/main.js",
   "author": "HanDrolio",
   "license": "UNLICENSED",
@@ -24,6 +24,7 @@
     "files": [
       "index.html",
       "manifest.webmanifest",
+      "icon.svg",
       "sw.js",
       "css/**/*",
       "js/**/*",
@@ -31,6 +32,7 @@
     ],
     "asar": true,
     "win": {
+      "icon": "icon.svg",
       "target": [
         {
           "target": "nsis",

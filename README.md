@@ -1,33 +1,85 @@
 # COSM.OS Desktop
 
-**A private, local-first Windows AI journal and conversation system powered by Ollama.**
+**A private, local-first desktop archive for conversations, journals, local AI replies, and the threads that connect them.**
 
-COSM.OS Desktop runs an installed language model on your own computer, stores chats locally, and routes conversation through nine distinct cognitive personas. The current release is **v0.7.0**.
+COSM.OS Desktop runs on your Windows computer, talks to Ollama only through localhost at port 11434, and stores its archive in local browser storage. It has no account, cloud database, telemetry pipeline, or remote archive sync.
 
 > The system may help the operator think. It may never replace the operator's judgment.
 
+## v0.8.0 — Living Archive
+
+### Search your past. Follow the thread. Open the original moment.
+
+- Search every stored chat message, journal entry, remembered note, and local Ollama reply.
+- Filter results by keyword, source, persona, and date.
+- Jump from a result directly back to the original chat or journal moment.
+- Scan the existing archive retroactively without changing the original words.
+- Browse a dedicated Threads page with moment count, latest activity, phase, and connected personas.
+- Open a chronological timeline that combines related chats, notes, and local replies.
+- Rename, pin, hide, merge, and manually add or remove moments from threads.
+- Generate deterministic thread summaries by default.
+- Optionally ask the installed local Ollama model for a richer summary; archive data never goes to a cloud model.
+- Export and import a versioned portable archive containing chats, journal entries, thread IDs, thread controls, and model/UI settings.
+
 ## Download
 
-Get the latest Windows installer from the repository's **Releases** page:
+Get the newest installer from [the latest release](../../releases/latest).
 
-**[Download COSM.OS Desktop](../../releases/latest)**
+- [COSM.OS Desktop v0.8.0](../../releases/tag/v0.8.0)
+- [COSM.OS Desktop v0.7.0 — Pure Signal Reset](../../releases/tag/v0.7.0)
 
-The installer is unsigned, so Windows SmartScreen may display a warning. The application does not bundle an AI model; Ollama and a local model must be installed separately.
+The installer is unsigned, so Windows SmartScreen may display a warning. COSM.OS does not bundle a model; install Ollama and at least one local chat model separately.
 
-## What it includes
+## The archive boundary
 
-- Native Windows desktop application built with Electron
-- Local Ollama connection through `127.0.0.1:11434`
-- Automatic detection of installed models
-- Automatic preference for the largest installed Qwen model
-- Manual model selection and refresh
-- Multi-chat local sidebar
-- Separate Chat and Log modes
-- JSON import and export
-- Generation presets and basic model tuning
-- Nine compact persona prompts
-- Deterministic `remember`, `summary`, and `plan` commands
-- No account, cloud database, or internet connection required after setup
+Every archive moment receives a stable local ID and source pointer:
+
+~~~text
+chat message ──┐
+journal entry ─┼─→ record ID + timestamp + source + persona + thread IDs
+local reply ───┤
+remembered note┘
+~~~
+
+Thread scans add relationships beside the original records. They do not rewrite chat text, journal text, or Ollama replies. Manual removals are preserved across future scans.
+
+Portable exports use a versioned JSON envelope:
+
+~~~json
+{
+  "format": "cosmos.desktop.archive",
+  "archiveVersion": 2,
+  "appVersion": "0.8.0"
+}
+~~~
+
+Import merges stable archive records and relationships instead of treating the file as a disposable transcript.
+
+## Local model architecture
+
+~~~text
+COSM.OS renderer
+      ↓ secure preload API
+Electron main process
+      ↓ localhost only
+Ollama API at 127.0.0.1:11434
+      ↓
+installed local model
+~~~
+
+The renderer has no Node.js or shell access. The optional thread-summary action uses the same local Ollama path; normal chats remain compact:
+
+~~~text
+selected persona prompt
+      ↓
+last three raw exchanges
+      ↓
+current user message
+      ↓
+local Ollama model
+~~~
+
+Log mode uses the selected persona prompt and the one current journal entry only.
 
 ## The nine personas
 
@@ -43,45 +95,15 @@ The installer is unsigned, so Windows SmartScreen may display a warning. The app
 | 🟣🌀 Flux | natural conversation and synthesis |
 | 🟦🌌🟨 COSM.OS | architecture and system explanation |
 
-## v0.7 architecture
+## Explicit commands
 
-COSM.OS v0.7 removes the prompt machinery that made small local models overthink.
+These remain deterministic local utilities. They only run when typed directly:
 
-### Chat Mode
-
-```text
-selected persona prompt
-      ↓
-last three raw exchanges
-      ↓
-current user message
-      ↓
-local Ollama model
-```
-
-When no persona is selected, Chat Mode defaults to **Flux**.
-
-### Log Mode
-
-```text
-selected persona prompt
-      ↓
-current log entry only
-      ↓
-local Ollama model
-```
-
-Log Mode receives no chat history and no retrieved memories. When no persona is selected, it defaults to **Ripple**.
-
-### Explicit commands
-
-These run deterministic local logic only when typed directly:
-
-```text
+~~~text
 remember <exact note>
 summary
 plan <goal>
-```
+~~~
 
 ## Requirements
 
@@ -89,59 +111,38 @@ plan <goal>
 - Ollama installed and running
 - At least one local chat model
 
-Recommended for the original ThinkCentre build:
+For the original ThinkCentre build:
 
-```powershell
+~~~powershell
 ollama pull qwen2.5:3b
-```
-
-Confirm Ollama can see the model:
-
-```powershell
 ollama list
-```
-
-Then install and open COSM.OS Desktop.
+~~~
 
 ## Run from source
 
-```powershell
+~~~powershell
 npm install
 npm start
-```
+~~~
 
-## Build the installer
+## Build the Windows installer
 
-```powershell
+~~~powershell
 npm run dist
-```
+~~~
 
 The installer is written to:
 
-```text
-dist/COSM.OS-Setup-0.7.0.exe
-```
+~~~text
+dist/COSM.OS-Setup-0.8.0.exe
+~~~
 
-## Security boundary
+## Release history
 
-```text
-COSM.OS renderer
-      ↓ secure preload API
-Electron main process
-      ↓ localhost only
-Ollama API
-      ↓
-installed local model
-```
+COSM.OS moved through three hardware stages:
 
-The renderer has no Node.js or shell access. Chats and logs stay in local browser storage on the machine.
-
-## Project history
-
-COSM.OS evolved across three hardware stages:
-
-```text
+~~~text
 iPhone Shortcut → Chromebook web app → Windows ThinkCentre desktop app
-```
+~~~
 
-The first fully offline Windows milestone was completed on August 3, 2026. See [CHANGELOG.md](./CHANGELOG.md) for the version history.
+The first fully offline Windows milestone shipped as v0.7.0 on August 3, 2026. v0.8.0 turns that local journal into a searchable map of life and projects. See [CHANGELOG.md](./CHANGELOG.md) for the full history.
