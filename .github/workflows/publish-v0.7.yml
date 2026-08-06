@@ -1,9 +1,7 @@
-name: Publish COSM.OS Desktop v0.7.1 UI Refresh
+name: Publish COSM.OS Desktop v0.7.0
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '*/5 * * * *'
   push:
     branches:
       - main
@@ -11,11 +9,10 @@ on:
       - .github/workflows/publish-v0.7.yml
 
 permissions:
-  actions: write
   contents: write
 
 concurrency:
-  group: publish-cosmos-desktop-v0.7-ui-refresh
+  group: publish-cosmos-desktop-v0.7
   cancel-in-progress: true
 
 jobs:
@@ -23,28 +20,26 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Check out UI refresh source
+      - name: Check out source
         uses: actions/checkout@v4
         with:
-          ref: ui-refresh
           fetch-depth: 0
 
-      - name: Record active workflow run
+      - name: Record workflow run
         shell: pwsh
         run: |
           @"
-          # Active UI refresh release workflow
+          # Active release workflow
 
           Run ID: $env:GITHUB_RUN_ID
-          Event commit: $env:GITHUB_SHA
-          Source branch: ui-refresh
-          "@ | Set-Content WORKFLOW-RUN-UI-REFRESH.md
+          Commit: $env:GITHUB_SHA
+          "@ | Set-Content WORKFLOW-RUN.md
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add WORKFLOW-RUN-UI-REFRESH.md
-          git commit -m "Record active v0.7.1 UI refresh workflow"
-          git push origin HEAD:ui-refresh
+          git add WORKFLOW-RUN.md
+          git commit -m "Record active v0.7.0 release workflow"
+          git push origin HEAD:main
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -75,81 +70,69 @@ jobs:
         shell: pwsh
         run: |
           Compress-Archive `
-            -Path "dist/COSM.OS-Setup-0.7.1.exe", "README.md", "CHANGELOG.md" `
-            -DestinationPath "COSM.OS-Windows-0.7.1-UI-Refresh.zip" `
+            -Path "dist/COSM.OS-Setup-0.7.0.exe", "README.md", "CHANGELOG.md" `
+            -DestinationPath "COSM.OS-Windows-0.7.0.zip" `
             -Force
 
       - name: Write release notes
         shell: pwsh
         run: |
           @"
-          ## COSM.OS Desktop v0.7.1 — UI Refresh
+          ## COSM.OS Desktop v0.7.0 — Pure Signal Reset
 
-          The stable v0.7 engine with a focused professional interface pass.
+          A private Windows desktop AI journal and conversation system powered by local Ollama models.
 
-          ### What changed
-          - Refined dark visual system with consistent spacing and radii
-          - New blue/gold twin-node COSM.OS mark
-          - Cleaner SVG controls and model tuning interface
-          - Polished persona rail, chat bubbles, thread cards, sidebar, and composer
-          - Improved responsive behavior and reduced-motion support
-
-          ### What did not change
-          - Local Ollama integration
-          - Persona routing and prompts
-          - Chat and log behavior
-          - Local storage, import, and export logic
-          - Electron main and preload logic
+          ### Highlights
+          - Nine compact personas
+          - Chat Mode with only three raw exchanges of context
+          - One-shot Log Mode
+          - Deterministic `remember`, `summary`, and `plan` commands
+          - Local model selection and generation presets
+          - Local chats, logs, import, and export
+          - No cloud account required
 
           ### Setup
           1. Install and run Ollama.
-          2. Pull a compatible local model.
+          2. Pull a model such as `qwen2.5:3b`.
           3. Run the attached Windows installer.
 
-          This is an unsigned prerelease build and may trigger Microsoft SmartScreen.
-          "@ | Set-Content RELEASE-NOTES-UI-REFRESH.md
+          The installer is unsigned and may trigger Microsoft SmartScreen.
+          "@ | Set-Content RELEASE-NOTES.md
 
-      - name: Publish GitHub prerelease
+      - name: Replace v0.7.0 release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete v0.7.1-ui-refresh --yes --cleanup-tag 2>$null
+          gh release delete v0.7.0 --yes --cleanup-tag 2>$null
           if ($LASTEXITCODE -ne 0) {
-            Write-Host "No previous UI refresh prerelease found; creating a new one."
+            Write-Host "No previous v0.7.0 release found; creating a new one."
           }
 
-          gh release create v0.7.1-ui-refresh `
-            "dist/COSM.OS-Setup-0.7.1.exe" `
-            "COSM.OS-Windows-0.7.1-UI-Refresh.zip" `
-            --title "COSM.OS Desktop v0.7.1 UI Refresh" `
-            --notes-file "RELEASE-NOTES-UI-REFRESH.md" `
-            --target ui-refresh `
-            --prerelease
+          gh release create v0.7.0 `
+            "dist/COSM.OS-Setup-0.7.0.exe" `
+            "COSM.OS-Windows-0.7.0.zip" `
+            --title "COSM.OS Desktop v0.7.0" `
+            --notes-file "RELEASE-NOTES.md" `
+            --target main
 
       - name: Record successful publication
         shell: pwsh
         run: |
           @"
-          # UI refresh release status
+          # Release status
 
-          **COSM.OS Desktop v0.7.1 UI Refresh was built and published successfully.**
+          **COSM.OS Desktop v0.7.0 was built and published successfully.**
 
           Release assets:
 
-          - `COSM.OS-Setup-0.7.1.exe`
-          - `COSM.OS-Windows-0.7.1-UI-Refresh.zip`
+          - `COSM.OS-Setup-0.7.0.exe`
+          - `COSM.OS-Windows-0.7.0.zip`
 
-          Source branch: `ui-refresh`
-          Workflow run: `$env:GITHUB_RUN_ID`
-          "@ | Set-Content RELEASE-STATUS-UI-REFRESH.md
+          Verified source version: `0.7.0`
+          Workflow run: $env:GITHUB_RUN_ID
+          "@ | Set-Content RELEASE-STATUS.md
 
-          git add RELEASE-STATUS-UI-REFRESH.md
-          git commit -m "Record successful v0.7.1 UI refresh release"
-          git push origin HEAD:ui-refresh
-
-      - name: Disable one-shot workflow
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow disable publish-v0.7.yml
+          git add RELEASE-STATUS.md
+          git commit -m "Record successful v0.7.0 release"
+          git push origin HEAD:main
