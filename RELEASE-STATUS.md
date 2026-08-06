@@ -2,13 +2,15 @@
 
 ## v0.8.0 — Living Archive
 
-Source is prepared for the dedicated Windows release workflow:
+**COSM.OS Desktop v0.8.0 was built and published successfully.**
 
-- Windows installer: COSM.OS-Setup-0.8.0.exe
-- Release archive: COSM.OS-Windows-0.8.0.zip
-- Workflow: Publish COSM.OS Desktop v0.8.0
+Release assets:
 
-The workflow creates a separate v0.8.0 GitHub Release and does not alter the v0.7.0 release or its download assets.
+- COSM.OS-Setup-0.8.0.exe
+- COSM.OS-Windows-0.8.0.zip
+
+Verified source version: 0.8.0
+Workflow run: 31086525639
 
 ## v0.7.0 — Pure Signal Reset
 
