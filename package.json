@@ -1,6 +1,6 @@
 {
   "name": "cosmos-desktop",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "private": true,
   "description": "Private Windows desktop living archive with local Ollama conversation, search, and threads.",
   "main": "desktop/main.js",
@@ -8,6 +8,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "start": "electron .",
+    "test": "node --test test/*.test.js",
     "dist": "electron-builder --win nsis",
     "dist:portable": "electron-builder --win portable"
   },

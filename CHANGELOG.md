@@ -2,6 +2,20 @@
 
 This changelog records the Windows desktop evolution of COSM.OS.
 
+## 0.8.1 — Local AI startup hotfix
+
+### Fixed
+
+- Chat and Journal now wait for Ollama's local model scan instead of rejecting a message while startup is still in progress.
+- Local AI failures now preserve the actual Ollama error in the conversation, so a stopped server, missing model, or connection failure is diagnosable.
+
+### Verified
+
+- Added automated tests for successful Ollama startup, visible startup failures, and the Chat/Journal startup wait.
+- Validated the Windows x64 unpacked application layout with electron-builder.
+
+---
+
 ## 0.8.0 — Living Archive
 
 ### Added

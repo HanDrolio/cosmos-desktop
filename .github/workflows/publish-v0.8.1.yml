@@ -1,0 +1,44 @@
+name: Publish COSM.OS Desktop v0.8.1
+
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/publish-v0.8.1.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify hotfix source
+        shell: pwsh
+        run: |
+          if ((node -p "require('./package.json').version") -ne '0.8.1') { throw 'Expected v0.8.1' }
+          Get-ChildItem js -Filter *.js | ForEach-Object { node --check $_.FullName }
+          node --check desktop/main.js
+          node --check desktop/preload.js
+      - name: Install and test
+        run: |
+          npm install
+          npm test
+      - name: Build Windows installer
+        run: npm run dist -- --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Package ZIP
+        shell: pwsh
+        run: Compress-Archive -Path 'dist/COSM.OS-Setup-0.8.1.exe', 'README.md', 'CHANGELOG.md' -DestinationPath 'COSM.OS-Windows-0.8.1.zip' -Force
+      - name: Publish v0.8.1 only
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete v0.8.1 --yes --cleanup-tag 2>$null
+          gh release create v0.8.1 'dist/COSM.OS-Setup-0.8.1.exe' 'COSM.OS-Windows-0.8.1.zip' --title 'COSM.OS Desktop v0.8.1' --notes 'Fixes local AI startup: Chat and Journal now wait for Ollama to finish its model scan, and show the real local error when it cannot respond.' --target $env:GITHUB_SHA

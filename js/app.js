@@ -217,6 +217,19 @@ function unavailableReply() {
   return 'Local model unavailable. Start Ollama or refresh the model list, then try again.';
 }
 
+function localAIErrorReply(error) {
+  const detail = error instanceof Error ? error.message : String(error || '').trim();
+  return detail
+    ? 'Local AI could not respond: ' + detail
+    : unavailableReply();
+}
+
+async function ensureLocalAI() {
+  if (!window.COSMOS_AI) throw new Error('The local AI bridge did not load. Restart COSM.OS.');
+  if (!modelReady()) await window.COSMOS_AI.load();
+  if (!modelReady()) throw new Error('Ollama did not select a local model.');
+}
+
 function renderShell() {
   const view = currentView();
   document.body.classList.toggle('sidebar-open', state.sidebarOpen);
@@ -526,18 +539,7 @@ async function sendChat(text) {
   save();
   render();
 
-  if (!modelReady()) {
-    chat.messages.push(newMessage('os', unavailableReply(), personaId));
-    touchChat(chat);
-    threadScanArchive(state);
-    save();
-    render();
-    flash(PERSONAS[personaId].color);
-    return;
-  }
-
-  const request = buildModelMessages(text, personaId, 'chat', chat);
-  const message = newMessage('os', 'Thinking locally…', personaId);
+  const message = newMessage('os', 'Starting local AI…', personaId);
   message.threadIds = [];
   message.generating = true;
   chat.messages.push(message);
@@ -546,10 +548,14 @@ async function sendChat(text) {
   render();
 
   try {
+    await ensureLocalAI();
+    message.text = 'Thinking locally…';
+    render();
+    const request = buildModelMessages(text, personaId, 'chat', chat);
     message.text = await window.COSMOS_AI.complete(request) || unavailableReply();
   } catch (error) {
     console.error(error);
-    message.text = unavailableReply();
+    message.text = localAIErrorReply(error);
   } finally {
     delete message.generating;
     setGenerating(false);
@@ -1110,7 +1116,7 @@ async function sendEntry(text) {
     ts,
     persona: personaId,
     source: 'journal',
-    reply: modelReady() ? 'Thinking locally…' : unavailableReply(),
+    reply: 'Starting local AI…',
     threadIds,
     replyThreadIds: threadIds
   };
@@ -1119,15 +1125,16 @@ async function sendEntry(text) {
   save();
   render();
   flash(PERSONAS[personaId].color);
-  if (!modelReady()) return;
-
   setGenerating(true);
   try {
+    await ensureLocalAI();
+    entry.reply = 'Thinking locally…';
+    render();
     const request = buildModelMessages(text, personaId, 'log');
     entry.reply = await window.COSMOS_AI.complete(request) || unavailableReply();
   } catch (error) {
     console.error(error);
-    entry.reply = unavailableReply();
+    entry.reply = localAIErrorReply(error);
   } finally {
     setGenerating(false);
     threadScanArchive(state);
