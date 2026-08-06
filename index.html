@@ -5,23 +5,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>COSM.OS</title>
 <meta name="description" content="A private local-first journal and conversation system powered by selected persona prompts and local Ollama models.">
-<meta name="theme-color" content="#06080f">
+<meta name="theme-color" content="#07090f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%2306080f'/><circle cx='22' cy='32' r='9' fill='%234a8dff'/><circle cx='42' cy='32' r='9' fill='%23f0c060'/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%2307090f'/><circle cx='23' cy='32' r='10' fill='%235b93ff'/><circle cx='41' cy='32' r='10' fill='%23e8b563'/></svg>">
 <link rel="stylesheet" href="./css/style.css">
 <link rel="stylesheet" href="./css/model-settings.css">
 </head>
 <body class="sidebar-open">
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+  <symbol id="i-tune" viewBox="0 0 24 24"><path d="M5 6h9M18 6h1M5 12h1M8 12h11M5 18h13M18 18h1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="16" cy="6" r="2.1" fill="currentColor"/><circle cx="6" cy="12" r="2.1" fill="currentColor"/><circle cx="16" cy="18" r="2.1" fill="currentColor"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.9-5.4M20 12a8 8 0 0 1-13.9 5.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M18 3v4.2h-4.2M6 21v-4.2h4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M12 19V6M6 11.5L12 6l6 5.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
 <div id="appShell">
   <aside id="sidebar" aria-label="chat history">
     <div class="sideHead">
-      <div class="sideBrand"><span>🟦🌌🟨</span><b>COSM.OS</b></div>
-      <button id="sidebarClose" aria-label="close sidebar">×</button>
+      <div class="sideBrand"><span class="brandMark" aria-hidden="true"></span><b>COSM.OS</b></div>
+      <button id="sidebarClose" class="iconBtn" aria-label="close sidebar"><svg class="icon"><use href="#i-close"/></svg></button>
     </div>
-    <button id="newChat"><span>＋</span> new chat</button>
+    <button id="newChat"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg> new chat</button>
     <div class="sideLabel">local chats</div>
     <div id="chatList"></div>
     <div class="sideFoot">stored privately on this machine</div>
@@ -31,7 +40,7 @@
 
   <section id="workspace">
     <header>
-      <button id="sidebarToggle" aria-label="toggle chat history">☰</button>
+      <button id="sidebarToggle" class="iconBtn" aria-label="toggle chat history"><svg class="icon"><use href="#i-menu"/></svg></button>
       <div class="chatHeading"><span id="currentChatTitle">New chat</span></div>
       <div class="tabs">
         <button class="tab on" data-mode="chat">chat</button>
@@ -53,8 +62,8 @@
       <select id="modelSelect" aria-label="local model">
         <option value="auto">auto · largest Qwen</option>
       </select>
-      <button class="util" id="modelTune" title="generation settings and presets" aria-label="open model settings">⚙</button>
-      <button class="util" id="modelRefresh" title="scan Ollama models" aria-label="refresh models">↻</button>
+      <button class="util iconUtil" id="modelTune" title="generation settings and presets" aria-label="open model settings"><svg class="icon"><use href="#i-tune"/></svg></button>
+      <button class="util iconUtil" id="modelRefresh" title="scan Ollama models" aria-label="refresh models"><svg class="icon"><use href="#i-refresh"/></svg></button>
       <button class="util" id="modelBtn">load local ai</button>
     </div>
 
@@ -63,7 +72,7 @@
     <div class="barwrap">
       <div class="bar" id="bar">
         <textarea id="input" rows="1" placeholder="say it plain…" aria-label="message"></textarea>
-        <button id="send" aria-label="send">↑</button>
+        <button id="send" aria-label="send"><svg class="icon"><use href="#i-send"/></svg></button>
       </div>
     </div>
   </section>
@@ -77,7 +86,7 @@
         <h2 id="modelSettingsTitle">Tune generation</h2>
         <p>Only sampling and context settings. Persona prompts stay fixed and clean.</p>
       </div>
-      <button id="tuneClose" aria-label="close model settings">×</button>
+      <button id="tuneClose" class="iconBtn" aria-label="close model settings"><svg class="icon"><use href="#i-close"/></svg></button>
     </div>
 
     <div class="tuneBody">
