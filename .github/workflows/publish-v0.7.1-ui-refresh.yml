@@ -2,6 +2,8 @@ name: Publish COSM.OS Desktop v0.7.1 UI Refresh
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '*/5 * * * *'
   push:
     branches: [main]
     paths:
@@ -9,6 +11,7 @@ on:
       - RELEASE-TRIGGER-v0.7.1.md
 
 permissions:
+  actions: write
   contents: write
 
 concurrency:
@@ -145,3 +148,9 @@ jobs:
           git add RELEASE-STATUS-UI-REFRESH.md
           git commit -m "Record successful v0.7.1 UI refresh release"
           git push origin HEAD:ui-refresh
+
+      - name: Disable one-shot release workflow
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow disable publish-v0.7.1-ui-refresh.yml
