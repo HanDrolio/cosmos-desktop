@@ -1,0 +1,133 @@
+name: Publish COSM.OS Desktop v0.7.1 UI Refresh
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/publish-v0.7.1-ui-refresh.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-cosmos-desktop-v0.7.1-ui-refresh
+  cancel-in-progress: true
+
+jobs:
+  build-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out UI refresh source
+        uses: actions/checkout@v4
+        with:
+          ref: ui-refresh
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify v0.7 engine JavaScript
+        shell: pwsh
+        run: |
+          node --check js/app.js
+          node --check js/desktop-ai.js
+          node --check js/model-settings.js
+          node --check js/voice-controller.js
+          node --check js/persona-prompts.js
+          node --check js/personas.js
+          node --check js/threads.js
+          node --check desktop/main.js
+          node --check desktop/preload.js
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build fresh Windows installer
+        run: npm run dist -- --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - name: Package Windows archive
+        shell: pwsh
+        run: |
+          Compress-Archive `
+            -Path "dist/COSM.OS-Setup-0.7.1.exe", "README.md", "CHANGELOG.md" `
+            -DestinationPath "COSM.OS-Windows-0.7.1-UI-Refresh.zip" `
+            -Force
+
+      - name: Write release notes
+        shell: pwsh
+        run: |
+          @"
+          ## COSM.OS Desktop v0.7.1 — UI Refresh
+
+          The stable v0.7 engine with a focused professional interface pass.
+
+          ### What changed
+          - Refined dark visual system with consistent spacing and radii
+          - New blue/gold twin-node COSM.OS mark
+          - Cleaner SVG controls and model tuning interface
+          - Polished persona rail, chat bubbles, thread cards, sidebar, and composer
+          - Improved responsive behavior and reduced-motion support
+
+          ### What did not change
+          - Local Ollama integration
+          - Persona routing and prompts
+          - Chat and log behavior
+          - Local storage, import, and export logic
+          - Electron main and preload logic
+
+          ### Setup
+          1. Install and run Ollama.
+          2. Pull a compatible local model.
+          3. Run the attached Windows installer.
+
+          This is an unsigned prerelease build and may trigger Microsoft SmartScreen.
+          "@ | Set-Content RELEASE-NOTES-UI-REFRESH.md
+
+      - name: Publish GitHub prerelease
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete v0.7.1-ui-refresh --yes --cleanup-tag 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "No previous UI refresh prerelease found; creating a new one."
+          }
+
+          gh release create v0.7.1-ui-refresh `
+            "dist/COSM.OS-Setup-0.7.1.exe" `
+            "COSM.OS-Windows-0.7.1-UI-Refresh.zip" `
+            --title "COSM.OS Desktop v0.7.1 UI Refresh" `
+            --notes-file "RELEASE-NOTES-UI-REFRESH.md" `
+            --target ui-refresh `
+            --prerelease
+
+      - name: Record successful UI refresh publication
+        shell: pwsh
+        run: |
+          @"
+          # UI refresh release status
+
+          **COSM.OS Desktop v0.7.1 UI Refresh was built and published successfully.**
+
+          Release assets:
+
+          - `COSM.OS-Setup-0.7.1.exe`
+          - `COSM.OS-Windows-0.7.1-UI-Refresh.zip`
+
+          Source branch: `ui-refresh`
+          Source commit: `$env:GITHUB_SHA`
+          Workflow run: `$env:GITHUB_RUN_ID`
+          "@ | Set-Content RELEASE-STATUS-UI-REFRESH.md
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add RELEASE-STATUS-UI-REFRESH.md
+          git commit -m "Record successful v0.7.1 UI refresh release"
+          git push origin HEAD:ui-refresh
